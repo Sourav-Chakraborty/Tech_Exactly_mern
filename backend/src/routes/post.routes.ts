@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as postController from "../controllers/post.controller";
+import commentRoutes from "./comment.routes";
 import { findActivePostById } from "../services/post.service";
 import { authenticate } from "../middleware/authenticate";
 import { checkOwnership } from "../middleware/checkOwnership";
@@ -16,6 +17,9 @@ const router = Router();
 
 // Owner of the post or an admin.
 const canModifyPost = checkOwnership((req) => findActivePostById(req.params.id as string));
+
+// Comments: /posts/:postId/comments
+router.use("/:postId/comments", commentRoutes);
 
 // Public
 router.get("/", validate(listPostsQuerySchema, "query"), postController.listPosts);

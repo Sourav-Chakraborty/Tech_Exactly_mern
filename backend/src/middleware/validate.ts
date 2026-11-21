@@ -12,6 +12,11 @@ export const validate =
   (req: Request, _res: Response, next: NextFunction) => {
     const parsed = schema.parse(req[source]);
     // req.query is a read-only getter in Express 5, so redefine it instead of assigning.
-    Object.defineProperty(req, source, { value: parsed, writable: true, enumerable: true });
+    Object.defineProperty(req, source, {
+      value: parsed,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
     next();
   };
