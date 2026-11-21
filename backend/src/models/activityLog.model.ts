@@ -10,6 +10,13 @@ export const ACTIVITY_ACTIONS = [
   "comment.create",
   "comment.update",
   "comment.delete",
+  // Admin actions
+  "admin.user.role",
+  "admin.user.status",
+  "admin.user.delete",
+  "admin.post.restore",
+  "admin.post.purge",
+  "admin.comment.delete",
 ] as const;
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
 
