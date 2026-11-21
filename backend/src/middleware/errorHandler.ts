@@ -32,7 +32,10 @@ const normalizeError = (err: unknown): ApiError => {
 
   // Zod validation error
   if (e?.name === "ZodError" && Array.isArray(e.issues)) {
-    const details = e.issues.map((i) => ({ field: i.path.join("."), message: i.message }));
+    const details = e.issues.map((i) => ({
+      field: i.path.join(".") || undefined, // root-level rules have no field
+      message: i.message,
+    }));
     return ApiError.badRequest("Validation failed", details);
   }
 
