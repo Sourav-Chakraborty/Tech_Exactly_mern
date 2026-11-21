@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { env } from "./config/env";
+import passport from "./config/passport";
 import healthRoutes from "./routes/health.routes";
 import authRoutes from "./routes/auth.routes";
 import postRoutes from "./routes/post.routes";
@@ -18,6 +19,7 @@ app.use(cors({ origin: env.clientUrl, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(passport.initialize()); // stateless: no sessions, JWTs are issued instead
 
 app.use("/api/v1/health", healthRoutes);
 app.use("/api/v1/auth", authRoutes);

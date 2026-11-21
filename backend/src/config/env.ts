@@ -1,6 +1,12 @@
 import "dotenv/config";
 import { z } from "zod";
 
+// Optional credential: an empty value in .env counts as "not configured".
+const optional = z
+  .string()
+  .optional()
+  .transform((v) => v || undefined);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().int().positive().default(5000),
@@ -10,6 +16,12 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32, "must be at least 32 characters"),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+  // Public URL of this API, used to build OAuth callback URLs
+  SERVER_URL: z.url().default("http://localhost:5000"),
+  GOOGLE_CLIENT_ID: optional,
+  GOOGLE_CLIENT_SECRET: optional,
+  FACEBOOK_APP_ID: optional,
+  FACEBOOK_APP_SECRET: optional,
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -32,5 +44,16 @@ export const env = {
     refreshSecret: e.JWT_REFRESH_SECRET,
     accessExpiresIn: e.JWT_ACCESS_EXPIRES_IN,
     refreshExpiresIn: e.JWT_REFRESH_EXPIRES_IN,
+  },
+  serverUrl: e.SERVER_URL,
+  oauth: {
+    google:
+      e.GOOGLE_CLIENT_ID && e.GOOGLE_CLIENT_SECRET
+        ? { clientId: e.GOOGLE_CLIENT_ID, clientSecret: e.GOOGLE_CLIENT_SECRET }
+        : undefined,
+    facebook:
+      e.FACEBOOK_APP_ID && e.FACEBOOK_APP_SECRET
+        ? { clientId: e.FACEBOOK_APP_ID, clientSecret: e.FACEBOOK_APP_SECRET }
+        : undefined,
   },
 };

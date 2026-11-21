@@ -9,9 +9,9 @@ export interface AuthUser {
 
 declare global {
   namespace Express {
-    interface Request {
-      // Set by the authenticate middleware
-      user?: AuthUser;
-    }
+    // req.user is declared by @types/passport as `user?: Express.User`.
+    // Extending that interface gives req.user our shape (set by the authenticate middleware).
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface User extends AuthUser {}
   }
 }

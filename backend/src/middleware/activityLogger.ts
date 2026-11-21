@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { ActivityLog, type ActivityAction } from "../models/activityLog.model";
 
-// Records a user activity once the response has finished successfully (2xx).
+// Records a user activity once the response has finished successfully (2xx, or a 3xx redirect
+// such as a completed social login; failed OAuth redirects set no user so they aren't logged).
 //
 // The user is req.user (authenticated routes) or res.locals.userId (set by controllers on
 // routes without authenticate, e.g. login). The resource id is res.locals.resourceId
@@ -11,7 +12,7 @@ import { ActivityLog, type ActivityAction } from "../models/activityLog.model";
 export const logActivity =
   (action: ActivityAction) => (req: Request, res: Response, next: NextFunction) => {
     res.on("finish", () => {
-      if (res.statusCode < 200 || res.statusCode >= 300) return;
+      if (res.statusCode < 200 || res.statusCode >= 400) return;
 
       const user = req.user?.id ?? res.locals.userId;
       if (!user) return;

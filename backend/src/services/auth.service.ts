@@ -1,6 +1,7 @@
 import { User, type UserDocument } from "../models/user.model";
 import type { LoginInput, RegisterInput } from "../validators/auth.validator";
 import { ApiError } from "../utils/ApiError";
+import type { OAuthProfile } from "../config/passport";
 import {
   hashToken,
   signAccessToken,
@@ -48,6 +49,42 @@ export const login = async ({ email, password }: LoginInput): Promise<AuthResult
   if (!user.isActive) throw ApiError.forbidden("Account is deactivated");
 
   return issueTokens(user);
+};
+
+// Social login. Resolves the account in this order:
+//   1. already linked to this provider id  -> log in
+//   2. existing account with the same email -> link the provider to it, log in
+//   3. otherwise                            -> create a new (password-less) account
+const findUserWithSessions = (filter: Record<string, string>) =>
+  User.findOne<UserDocument>(filter).select("+refreshTokens");
+
+export const oauthLogin = async (profile: OAuthProfile): Promise<AuthResult> => {
+  const providerField = profile.provider === "google" ? "googleId" : "facebookId";
+
+  let user = await findUserWithSessions({ [providerField]: profile.providerId });
+
+  if (!user) {
+    if (!profile.email) {
+      throw ApiError.badRequest(
+        `Your ${profile.provider} account did not share an email address, which is required`,
+      );
+    }
+
+    user = await findUserWithSessions({ email: profile.email });
+    if (user) {
+      user.set(providerField, profile.providerId);
+    } else {
+      user = new User({
+        name: (profile.name || profile.email.split("@")[0]).slice(0, 50),
+        email: profile.email,
+        [providerField]: profile.providerId,
+      });
+    }
+  }
+
+  if (!user.isActive) throw ApiError.forbidden("Account is deactivated");
+
+  return issueTokens(user); // saves the link / new user together with the session
 };
 
 // Rotation: the presented refresh token is consumed and replaced by a new one.

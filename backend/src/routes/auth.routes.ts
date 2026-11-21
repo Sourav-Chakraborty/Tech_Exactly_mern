@@ -26,4 +26,20 @@ router.post("/refresh", sessionLimiter, authController.refresh);
 router.post("/logout", sessionLimiter, logActivity("auth.logout"), authController.logout);
 router.get("/me", authenticate, authController.me);
 
+// Social login: browser navigates to /google (or /facebook); the provider redirects back to /callback.
+router.get("/google", sessionLimiter, authController.oauthStart("google"));
+router.get(
+  "/google/callback",
+  sessionLimiter,
+  logActivity("auth.login"),
+  authController.oauthCallback("google"),
+);
+router.get("/facebook", sessionLimiter, authController.oauthStart("facebook"));
+router.get(
+  "/facebook/callback",
+  sessionLimiter,
+  logActivity("auth.login"),
+  authController.oauthCallback("facebook"),
+);
+
 export default router;
