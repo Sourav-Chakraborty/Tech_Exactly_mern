@@ -82,7 +82,17 @@ export function CommentItem({ comment, onUpdated, onDeleted }: Props) {
 
       {editing ? (
         <div className="mt-2 space-y-2">
-          <TextAreaField label="Edit comment" hideLabel rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} error={error} />
+          <TextAreaField
+            label="Edit comment"
+            hideLabel
+            rows={3}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              setError(undefined);
+            }}
+            error={error}
+          />
           <div className="flex gap-2">
             <Button onClick={save} loading={busy}>
               Save

@@ -1,7 +1,8 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../hooks/useAuth";
-import { parseApiError, type ParsedApiError } from "../utils/apiError";
+import { parseApiError } from "../utils/apiError";
+import { useFormError } from "../hooks/useFormError";
 import { Alert } from "../components/ui/Alert";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
@@ -10,7 +11,7 @@ import { SocialLoginButtons } from "../components/auth/SocialLoginButtons";
 export function RegisterPage() {
   const { register } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [error, setError] = useState<ParsedApiError | null>(null);
+  const { error, setError, clearField } = useFormError();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -27,7 +28,10 @@ export function RegisterPage() {
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
-    onChange: (e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value }),
+    onChange: (e: ChangeEvent<HTMLInputElement>) => {
+      setForm({ ...form, [key]: e.target.value });
+      clearField(key);
+    },
     error: error?.fieldErrors[key],
   });
 

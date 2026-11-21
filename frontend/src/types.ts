@@ -61,6 +61,48 @@ export interface Comment {
   updatedAt: string;
 }
 
+// ---------- Admin ----------
+
+export interface AdminUser extends User {
+  googleId?: string;
+  facebookId?: string;
+}
+
+export interface AuthorWithEmail extends AuthorRef {
+  email: string;
+}
+
+// Admin post list: no content, includes soft-delete fields and the author's email.
+export interface AdminPost extends Omit<Post, "content" | "author"> {
+  author: AuthorWithEmail | null;
+  isDeleted: boolean;
+  deletedAt: string | null;
+}
+
+export interface AdminComment extends Omit<Comment, "author" | "post"> {
+  author: AuthorWithEmail | null;
+  post: { _id: string; title: string; slug: string; isDeleted: boolean } | null;
+}
+
+export interface ActivityEntry {
+  _id: string;
+  user: AuthorWithEmail | null;
+  action: string;
+  resourceId?: string;
+  ip?: string;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalPosts: number;
+  deletedPosts: number;
+  totalComments: number;
+  recentActivity: ActivityEntry[];
+}
+
+export type PostStatusFilter = "all" | "active" | "deleted";
+
 export interface Paginated<T> {
   items: T[];
   meta: PaginationMeta;

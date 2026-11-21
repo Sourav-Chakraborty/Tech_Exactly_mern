@@ -12,7 +12,11 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { OAuthCallbackPage } from "./pages/OAuthCallbackPage";
 import { PostDetailPage } from "./pages/PostDetailPage";
 import { MyPostsPage } from "./pages/MyPostsPage";
+import { AdminLayout } from "./components/admin/AdminLayout";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
+import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
+import { AdminPostsPage } from "./pages/admin/AdminPostsPage";
+import { AdminCommentsPage } from "./pages/admin/AdminCommentsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
 // The rich-text editor is large; load it only when someone opens the create/edit pages.
@@ -47,7 +51,12 @@ export default function App() {
 
                 {/* Admins only */}
                 <Route element={<ProtectedRoute role="admin" />}>
-                  <Route path="admin" element={<AdminDashboardPage />} />
+                  <Route path="admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboardPage />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="posts" element={<AdminPostsPage />} />
+                    <Route path="comments" element={<AdminCommentsPage />} />
+                  </Route>
                 </Route>
 
                 <Route path="*" element={<NotFoundPage />} />

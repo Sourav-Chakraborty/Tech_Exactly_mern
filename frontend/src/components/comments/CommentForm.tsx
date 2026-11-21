@@ -34,7 +34,10 @@ export function CommentForm({ postId, onCreated }: { postId: string; onCreated(c
         rows={3}
         maxLength={2000}
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={(e) => {
+          setContent(e.target.value);
+          setError(undefined);
+        }}
         error={error}
       />
       <Button type="submit" loading={submitting} disabled={!content.trim()}>

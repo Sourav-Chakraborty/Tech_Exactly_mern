@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../hooks/useAuth";
-import { parseApiError, type ParsedApiError } from "../utils/apiError";
+import { parseApiError } from "../utils/apiError";
+import { useFormError } from "../hooks/useFormError";
 import { Alert } from "../components/ui/Alert";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
@@ -14,7 +15,7 @@ export function LoginPage() {
   const oauthError = searchParams.get("error");
 
   const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState<ParsedApiError | null>(null);
+  const { error, setError, clearField } = useFormError();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -44,7 +45,10 @@ export function LoginPage() {
           autoComplete="email"
           required
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onChange={(e) => {
+            setForm({ ...form, email: e.target.value });
+            clearField("email");
+          }}
           error={error?.fieldErrors.email}
         />
         <FormField
@@ -53,7 +57,10 @@ export function LoginPage() {
           autoComplete="current-password"
           required
           value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          onChange={(e) => {
+            setForm({ ...form, password: e.target.value });
+            clearField("password");
+          }}
           error={error?.fieldErrors.password}
         />
         <Button type="submit" loading={submitting} className="w-full">

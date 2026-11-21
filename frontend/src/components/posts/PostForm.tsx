@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { PostInput } from "../../types";
-import { parseApiError, type ParsedApiError } from "../../utils/apiError";
+import { parseApiError } from "../../utils/apiError";
+import { useFormError } from "../../hooks/useFormError";
 import { Alert } from "../ui/Alert";
 import { Button } from "../ui/Button";
 import { FormField } from "../ui/FormField";
@@ -16,7 +17,7 @@ interface Props {
 // Shared by the create and edit pages. Validation is done by the API; its messages are shown per field.
 export function PostForm({ initial = { title: "", content: "" }, submitLabel, onSubmit, onCancel }: Props) {
   const [form, setForm] = useState<PostInput>(initial);
-  const [error, setError] = useState<ParsedApiError | null>(null);
+  const { error, setError, clearField } = useFormError();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -38,14 +39,20 @@ export function PostForm({ initial = { title: "", content: "" }, submitLabel, on
         label="Title"
         value={form.title}
         maxLength={150}
-        onChange={(e) => setForm({ ...form, title: e.target.value })}
+        onChange={(e) => {
+          setForm({ ...form, title: e.target.value });
+          clearField("title");
+        }}
         error={error?.fieldErrors.title}
         required
       />
       <RichTextEditor
         label="Content"
         initialValue={initial.content}
-        onChange={(content) => setForm((f) => ({ ...f, content }))}
+        onChange={(content) => {
+          setForm((f) => ({ ...f, content }));
+          clearField("content");
+        }}
         error={error?.fieldErrors.content}
       />
       <div className="flex gap-3">
