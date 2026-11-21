@@ -3,6 +3,7 @@ import { Post } from "../models/post.model";
 import { Comment } from "../models/comment.model";
 import { ActivityLog } from "../models/activityLog.model";
 import { ApiError } from "../utils/ApiError";
+import { notificationService } from "./notification.service";
 import { buildPaginationMeta, toSkip } from "../utils/pagination";
 import type { ListAdminPostsQuery, ListUsersQuery } from "../validators/admin.validator";
 
@@ -56,6 +57,7 @@ export const updateUserRole = async (adminId: string, userId: string, role: Role
   assertNotSelf(adminId, userId);
   const user = await User.findByIdAndUpdate(userId, { role }, { new: true }).lean();
   if (!user) throw ApiError.notFound("User not found");
+  notificationService.roleChanged(userId, role);
   return user;
 };
 
@@ -65,6 +67,7 @@ export const updateUserStatus = async (adminId: string, userId: string, isActive
   const update = isActive ? { isActive } : { isActive, refreshTokens: [] };
   const user = await User.findByIdAndUpdate(userId, update, { new: true }).lean();
   if (!user) throw ApiError.notFound("User not found");
+  if (!isActive) notificationService.disconnectUser(userId);
   return user;
 };
 
@@ -73,6 +76,7 @@ export const deleteUser = async (adminId: string, userId: string) => {
   assertNotSelf(adminId, userId);
   const user = await User.findByIdAndDelete(userId);
   if (!user) throw ApiError.notFound("User not found");
+  notificationService.disconnectUser(userId);
 
   await Promise.all([
     Comment.deleteMany({ author: userId }),

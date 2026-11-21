@@ -18,6 +18,8 @@ let accessToken: string | null = null;
 export const setAccessToken = (token: string | null) => {
   accessToken = token;
 };
+// Read by the Socket.io client on every (re)connect.
+export const getAccessToken = () => accessToken;
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;

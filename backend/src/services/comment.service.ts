@@ -1,6 +1,7 @@
 import { Comment, type CommentDocument } from "../models/comment.model";
 import { Post } from "../models/post.model";
 import { ApiError } from "../utils/ApiError";
+import { notificationService } from "./notification.service";
 import { buildPaginationMeta, toSkip } from "../utils/pagination";
 import type { CommentInput } from "../validators/comment.validator";
 
@@ -50,9 +51,21 @@ export const findCommentOnActivePost = async (postId: string, id: string) => {
 };
 
 export const createComment = async (postId: string, authorId: string, input: CommentInput) => {
-  await assertPostExists(postId);
+  // Load the fields the notification needs in the same query that checks the post exists.
+  const post = await Post.findOne({ _id: postId, isDeleted: false }).select("author title slug").lean();
+  if (!post) throw ApiError.notFound("Post not found");
+
   const comment = await Comment.create({ ...input, post: postId, author: authorId });
-  return comment.populate("author", AUTHOR_FIELDS);
+  await comment.populate("author", AUTHOR_FIELDS);
+
+  notificationService.commentCreated({
+    postAuthorId: String(post.author),
+    commenterId: authorId,
+    commenterName: (comment.author as unknown as { name: string }).name,
+    postTitle: post.title,
+    postSlug: post.slug,
+  });
+  return comment;
 };
 
 export const updateComment = async (comment: CommentDocument, input: CommentInput) => {

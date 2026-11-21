@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthProvider } from "./context/AuthProvider";
 import { ConfirmProvider } from "./context/ConfirmProvider";
+import { ToastProvider } from "./context/ToastProvider";
+import { NotificationListener } from "./components/NotificationListener";
 import { Layout } from "./components/layout/Layout";
 import { GuestRoute } from "./components/routing/GuestRoute";
 import { ProtectedRoute } from "./components/routing/ProtectedRoute";
@@ -27,43 +29,47 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ConfirmProvider>
-          <Suspense fallback={<Spinner fullPage />}>
-            <Routes>
-              <Route element={<Layout />}>
-                {/* Public */}
-                <Route index element={<HomePage />} />
-                <Route path="posts/:slug" element={<PostDetailPage />} />
-                <Route path="oauth/callback" element={<OAuthCallbackPage />} />
+        <ToastProvider>
+          <ConfirmProvider>
+            {/* Real-time notifications (Socket.io) -> toasts, while logged in */}
+            <NotificationListener />
+            <Suspense fallback={<Spinner fullPage />}>
+              <Routes>
+                <Route element={<Layout />}>
+                  {/* Public */}
+                  <Route index element={<HomePage />} />
+                  <Route path="posts/:slug" element={<PostDetailPage />} />
+                  <Route path="oauth/callback" element={<OAuthCallbackPage />} />
 
-                {/* Logged-out only */}
-                <Route element={<GuestRoute />}>
-                  <Route path="login" element={<LoginPage />} />
-                  <Route path="register" element={<RegisterPage />} />
-                </Route>
-
-                {/* Any logged-in user */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="posts/new" element={<CreatePostPage />} />
-                  <Route path="posts/:id/edit" element={<EditPostPage />} />
-                  <Route path="my-posts" element={<MyPostsPage />} />
-                </Route>
-
-                {/* Admins only */}
-                <Route element={<ProtectedRoute role="admin" />}>
-                  <Route path="admin" element={<AdminLayout />}>
-                    <Route index element={<AdminDashboardPage />} />
-                    <Route path="users" element={<AdminUsersPage />} />
-                    <Route path="posts" element={<AdminPostsPage />} />
-                    <Route path="comments" element={<AdminCommentsPage />} />
+                  {/* Logged-out only */}
+                  <Route element={<GuestRoute />}>
+                    <Route path="login" element={<LoginPage />} />
+                    <Route path="register" element={<RegisterPage />} />
                   </Route>
-                </Route>
 
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </ConfirmProvider>
+                  {/* Any logged-in user */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="posts/new" element={<CreatePostPage />} />
+                    <Route path="posts/:id/edit" element={<EditPostPage />} />
+                    <Route path="my-posts" element={<MyPostsPage />} />
+                  </Route>
+
+                  {/* Admins only */}
+                  <Route element={<ProtectedRoute role="admin" />}>
+                    <Route path="admin" element={<AdminLayout />}>
+                      <Route index element={<AdminDashboardPage />} />
+                      <Route path="users" element={<AdminUsersPage />} />
+                      <Route path="posts" element={<AdminPostsPage />} />
+                      <Route path="comments" element={<AdminCommentsPage />} />
+                    </Route>
+                  </Route>
+
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </ConfirmProvider>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

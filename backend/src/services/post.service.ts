@@ -1,6 +1,7 @@
 import { isObjectIdOrHexString } from "mongoose";
 import { Post, type PostDocument } from "../models/post.model";
 import { ApiError } from "../utils/ApiError";
+import { notificationService } from "./notification.service";
 import { buildPaginationMeta, toSkip } from "../utils/pagination";
 import { slugify, slugSuffix } from "../utils/slugify";
 import type { CreatePostInput, ListPostsQuery, UpdatePostInput } from "../validators/post.validator";
@@ -56,7 +57,15 @@ export const createPost = async (authorId: string, input: CreatePostInput) => {
     author: authorId,
     slug: await generateUniqueSlug(input.title),
   });
-  return post.populate("author", AUTHOR_FIELDS);
+  await post.populate("author", AUTHOR_FIELDS);
+
+  notificationService.postCreated({
+    authorId,
+    authorName: (post.author as unknown as { name: string }).name,
+    postTitle: post.title,
+    postSlug: post.slug,
+  });
+  return post;
 };
 
 export const updatePost = async (post: PostDocument, input: UpdatePostInput) => {
