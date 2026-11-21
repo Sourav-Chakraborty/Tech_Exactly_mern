@@ -6,9 +6,11 @@ import { env } from "./config/env";
 import healthRoutes from "./routes/health.routes";
 import authRoutes from "./routes/auth.routes";
 import { errorHandler, notFound } from "./middleware/errorHandler";
+import { requestLogger } from "./middleware/activityLogger";
 
 const app = express();
 
+if (env.nodeEnv !== "test") app.use(requestLogger);
 app.use(helmet());
 app.use(cors({ origin: env.clientUrl, credentials: true }));
 app.use(express.json());

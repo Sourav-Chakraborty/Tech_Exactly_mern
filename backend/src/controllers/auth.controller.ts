@@ -25,6 +25,7 @@ const respondWithTokens = (
   statusCode = 200,
 ) => {
   setRefreshCookie(res, result.refreshToken);
+  res.locals.userId = result.user.id; // for the activity logger
   sendSuccess(res, {
     statusCode,
     message,
@@ -54,7 +55,11 @@ export const refresh = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {
-  await authService.logout(req.cookies?.[REFRESH_COOKIE]);
+  res.locals.userId = await authService.logout(req.cookies?.[REFRESH_COOKIE]);
   res.clearCookie(REFRESH_COOKIE, cookieOptions);
   sendSuccess(res, { message: "Logged out" });
+};
+
+export const me = (req: Request, res: Response) => {
+  sendSuccess(res, { data: { user: req.user } });
 };

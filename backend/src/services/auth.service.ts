@@ -72,12 +72,15 @@ export const refresh = async (token: string | undefined): Promise<AuthResult> =>
 };
 
 // Revokes only the current session's refresh token. Never fails, so logout is always clean.
-export const logout = async (token: string | undefined): Promise<void> => {
-  if (!token) return;
+// Returns the user id when a session was identified (used for activity logging).
+export const logout = async (token: string | undefined): Promise<string | undefined> => {
+  if (!token) return undefined;
   try {
     const payload = verifyRefreshToken(token);
     await User.updateOne({ _id: payload.sub }, { $pull: { refreshTokens: hashToken(token) } });
+    return payload.sub;
   } catch {
     // Expired or tampered token: nothing to revoke.
+    return undefined;
   }
 };
