@@ -24,7 +24,7 @@ export const getStats = async () => {
     Post.countDocuments({ isDeleted: true }),
     Comment.countDocuments(),
     ActivityLog.find()
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .limit(RECENT_ACTIVITY_LIMIT)
       .populate("user", "name email")
       .lean(),
@@ -44,7 +44,7 @@ export const listUsers = async ({ page, limit, search, role }: ListUsersQuery) =
   }
 
   const [users, total] = await Promise.all([
-    User.find(filter).sort({ createdAt: -1 }).skip(toSkip(page, limit)).limit(limit).lean(),
+    User.find(filter).sort({ createdAt: -1, _id: -1 }).skip(toSkip(page, limit)).limit(limit).lean(),
     User.countDocuments(filter),
   ]);
 
@@ -94,7 +94,7 @@ export const listPosts = async ({ page, limit, status }: ListAdminPostsQuery) =>
 
   const [posts, total] = await Promise.all([
     Post.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .skip(toSkip(page, limit))
       .limit(limit)
       .select("-content")
@@ -128,7 +128,7 @@ export const purgePost = async (postId: string) => {
 export const listComments = async (page: number, limit: number) => {
   const [comments, total] = await Promise.all([
     Comment.find()
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .skip(toSkip(page, limit))
       .limit(limit)
       .populate("author", "name email")

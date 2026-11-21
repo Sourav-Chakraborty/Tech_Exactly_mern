@@ -19,7 +19,7 @@ export const listComments = async (postId: string, page: number, limit: number) 
   const filter = { post: postId };
   const [comments, total] = await Promise.all([
     Comment.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .skip(toSkip(page, limit))
       .limit(limit)
       .populate("author", AUTHOR_FIELDS)

@@ -20,6 +20,6 @@ const commentSchema = new Schema<IComment>(
 );
 
 // A post's comments, newest first.
-commentSchema.index({ post: 1, createdAt: -1 });
+commentSchema.index({ post: 1, createdAt: -1, _id: -1 });
 
 export const Comment = model<IComment>("Comment", commentSchema);

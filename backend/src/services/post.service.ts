@@ -21,7 +21,7 @@ export const listPosts = async ({ page, limit, author }: ListPostsQuery) => {
 
   const [posts, total] = await Promise.all([
     Post.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .skip(toSkip(page, limit))
       .limit(limit)
       .select("-isDeleted -deletedAt")

@@ -16,6 +16,8 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32, "must be at least 32 characters"),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+  // bcrypt cost factor; tests lower it to keep the suite fast
+  BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(4).max(15).default(12),
   // Public URL of this API, used to build OAuth callback URLs
   SERVER_URL: z.url().default("http://localhost:5000"),
   GOOGLE_CLIENT_ID: optional,
@@ -45,6 +47,7 @@ export const env = {
     accessExpiresIn: e.JWT_ACCESS_EXPIRES_IN,
     refreshExpiresIn: e.JWT_REFRESH_EXPIRES_IN,
   },
+  bcryptSaltRounds: e.BCRYPT_SALT_ROUNDS,
   serverUrl: e.SERVER_URL,
   oauth: {
     google:

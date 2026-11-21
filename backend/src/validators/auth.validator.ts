@@ -1,14 +1,17 @@
 import { z } from "zod";
 
+// Normalize first, then validate, so " Alice@Example.com " is accepted as "alice@example.com".
+const email = z.string().trim().toLowerCase().pipe(z.email());
+
 export const registerSchema = z.object({
   name: z.string().trim().min(2).max(50),
-  email: z.email().trim().toLowerCase(),
+  email,
   // bcrypt only uses the first 72 bytes
   password: z.string().min(8).max(72),
 });
 
 export const loginSchema = z.object({
-  email: z.email().trim().toLowerCase(),
+  email,
   password: z.string().min(1, "Password is required"),
 });
 

@@ -26,8 +26,8 @@ const postSchema = new Schema<IPost>(
 );
 
 // Public feed: non-deleted posts, newest first.
-postSchema.index({ isDeleted: 1, createdAt: -1 });
+postSchema.index({ isDeleted: 1, createdAt: -1, _id: -1 });
 // A single author's posts, newest first.
-postSchema.index({ author: 1, isDeleted: 1, createdAt: -1 });
+postSchema.index({ author: 1, isDeleted: 1, createdAt: -1, _id: -1 });
 
 export const Post = model<IPost>("Post", postSchema);

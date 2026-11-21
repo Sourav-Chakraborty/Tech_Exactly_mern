@@ -1,5 +1,6 @@
 import { Schema, model, type HydratedDocument, type Model } from "mongoose";
 import bcrypt from "bcryptjs";
+import { env } from "../config/env";
 
 export const ROLES = ["user", "admin"] as const;
 export type Role = (typeof ROLES)[number];
@@ -23,8 +24,6 @@ interface IUserMethods {
 
 type UserModel = Model<IUser, object, IUserMethods>;
 export type UserDocument = HydratedDocument<IUser, IUserMethods>;
-
-const SALT_ROUNDS = 12;
 
 const userSchema = new Schema<IUser, UserModel, IUserMethods>(
   {
@@ -52,7 +51,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
-  this.password = await bcrypt.hash(this.password, SALT_ROUNDS);
+  this.password = await bcrypt.hash(this.password, env.bcryptSaltRounds);
 });
 
 userSchema.methods.comparePassword = function (candidate: string) {
