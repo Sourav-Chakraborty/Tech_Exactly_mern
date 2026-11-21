@@ -24,9 +24,14 @@ export function Layout() {
             Posts
           </NavLink>
           {user && (
-            <NavLink to="/posts/new" className={navClass}>
-              New post
-            </NavLink>
+            <>
+              <NavLink to="/my-posts" className={navClass}>
+                My posts
+              </NavLink>
+              <NavLink to="/posts/new" className={navClass}>
+                New post
+              </NavLink>
+            </>
           )}
           {isAdmin && (
             <NavLink to="/admin" className={navClass}>

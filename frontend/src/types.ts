@@ -36,6 +36,41 @@ export interface AuthPayload {
   accessToken: string;
 }
 
+// Populated author: the API only returns the name.
+export interface AuthorRef {
+  _id: string;
+  name: string;
+}
+
+export interface Post {
+  _id: string;
+  title: string;
+  content: string;
+  slug: string;
+  author: AuthorRef;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Comment {
+  _id: string;
+  content: string;
+  post: string;
+  author: AuthorRef;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
+export interface PostInput {
+  title: string;
+  content: string;
+}
+
 export interface LoginInput {
   email: string;
   password: string;

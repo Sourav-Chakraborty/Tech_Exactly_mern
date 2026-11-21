@@ -5,6 +5,13 @@ import { env } from "../config/env";
 export const ROLES = ["user", "admin"] as const;
 export type Role = (typeof ROLES)[number];
 
+// Links a replaced refresh token to the one that replaced it.
+export interface RotatedRefreshToken {
+  hash: string;
+  replacedBy: string;
+  rotatedAt: Date;
+}
+
 export interface IUser {
   name: string;
   email: string;
@@ -14,6 +21,7 @@ export interface IUser {
   facebookId?: string;
   isActive: boolean;
   refreshTokens: string[]; // SHA-256 hashes of issued refresh tokens (one per session)
+  rotatedRefreshTokens: RotatedRefreshToken[]; // recently replaced tokens (refresh grace period)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +43,16 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
     facebookId: { type: String, unique: true, sparse: true },
     isActive: { type: Boolean, default: true },
     refreshTokens: { type: [String], select: false, default: [] },
+    rotatedRefreshTokens: {
+      type: [
+        new Schema<RotatedRefreshToken>(
+          { hash: String, replacedBy: String, rotatedAt: Date },
+          { _id: false },
+        ),
+      ],
+      select: false,
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -42,6 +60,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
       transform: (_doc, ret: Record<string, unknown>) => {
         delete ret.password;
         delete ret.refreshTokens;
+        delete ret.rotatedRefreshTokens;
         delete ret.__v;
         return ret;
       },

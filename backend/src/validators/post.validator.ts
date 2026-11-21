@@ -1,8 +1,15 @@
 import { z } from "zod";
 import { objectIdSchema, paginationSchema } from "./common.validator";
+import { htmlToText, sanitizePostHtml } from "../utils/sanitizeHtml";
 
 const title = z.string().trim().min(3).max(150);
-const content = z.string().trim().min(1).max(50_000);
+
+// Rich text (HTML). Sanitized here, so services only ever receive safe HTML.
+const content = z
+  .string()
+  .max(100_000, "Content is too long")
+  .transform(sanitizePostHtml)
+  .refine((html) => htmlToText(html).length > 0, "Content is required");
 
 export const createPostSchema = z.object({ title, content });
 

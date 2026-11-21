@@ -1,1 +1,12 @@
 @import "tailwindcss";
+/* `prose` styles for rendered post HTML and the editor */
+@plugin "@tailwindcss/typography";
+
+/* Placeholder for the empty rich-text editor (TipTap marks the empty first paragraph) */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-slate-400);
+}

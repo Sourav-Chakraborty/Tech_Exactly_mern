@@ -5,6 +5,13 @@ import { PASSWORD, createUser } from "../../helpers";
 
 const sessionsOf = async (id: string) => (await User.findById(id).select("+refreshTokens"))!.refreshTokens;
 
+// Pretend every rotation happened before the grace period started.
+const expireGracePeriod = (id: string) =>
+  User.updateOne(
+    { _id: id },
+    { $set: { "rotatedRefreshTokens.$[].rotatedAt": new Date(Date.now() - authService.REFRESH_GRACE_MS - 1000) } },
+  );
+
 describe("auth.service", () => {
   describe("register", () => {
     it("creates a user with a bcrypt-hashed password and returns tokens", async () => {
@@ -78,15 +85,56 @@ describe("auth.service", () => {
       expect(await sessionsOf(user.id)).toEqual([hashToken(second.refreshToken)]);
     });
 
-    it("treats reuse of an old token as theft and revokes every session", async () => {
+    it("treats reuse of a token replaced longer ago than the grace period as theft", async () => {
       const user = await createUser();
       const deviceA = await authService.login({ email: user.email, password: PASSWORD });
       const deviceB = await authService.login({ email: user.email, password: PASSWORD });
-      await authService.refresh(deviceA.refreshToken); // A's token is now used up
+      await authService.refresh(deviceA.refreshToken); // A's token is now replaced
+      await expireGracePeriod(user.id);
 
       await expect(authService.refresh(deviceA.refreshToken)).rejects.toMatchObject({ statusCode: 401 });
       expect(await sessionsOf(user.id)).toEqual([]);
       await expect(authService.refresh(deviceB.refreshToken)).rejects.toMatchObject({ statusCode: 401 });
+    });
+
+    describe("grace period (concurrent refreshes with the same cookie, e.g. several tabs)", () => {
+      it("accepts a just-replaced token and keeps it as ONE session", async () => {
+        const user = await createUser();
+        const { refreshToken: t1 } = await authService.login({ email: user.email, password: PASSWORD });
+
+        const tabA = await authService.refresh(t1);
+        const tabB = await authService.refresh(t1); // same cookie, a moment later
+
+        expect(tabB.accessToken).toEqual(expect.any(String));
+        expect(await sessionsOf(user.id)).toEqual([hashToken(tabB.refreshToken)]);
+        // Tab A's token was superseded within the grace period too, so it still works.
+        const again = await authService.refresh(tabA.refreshToken);
+        expect(await sessionsOf(user.id)).toEqual([hashToken(again.refreshToken)]);
+      });
+
+      it("handles truly simultaneous refreshes (several tabs at once) without revoking", async () => {
+        const user = await createUser();
+        const { refreshToken: t1 } = await authService.login({ email: user.email, password: PASSWORD });
+
+        const results = await Promise.allSettled([1, 2, 3, 4].map(() => authService.refresh(t1)));
+
+        expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+        const sessions = await sessionsOf(user.id);
+        expect(sessions).toHaveLength(1);
+        // Whichever response's cookie the browser keeps, it leads to that one session.
+        for (const r of results as PromiseFulfilledResult<authService.AuthResult>[]) {
+          await expect(authService.refresh(r.value.refreshToken)).resolves.toBeDefined();
+        }
+      });
+
+      it("does not resurrect a session that was logged out", async () => {
+        const user = await createUser();
+        const { refreshToken: t1 } = await authService.login({ email: user.email, password: PASSWORD });
+        const { refreshToken: t2 } = await authService.refresh(t1);
+        await authService.logout(t2);
+
+        await expect(authService.refresh(t1)).rejects.toMatchObject({ statusCode: 401 });
+      });
     });
 
     it("rejects a missing token with 401", async () => {

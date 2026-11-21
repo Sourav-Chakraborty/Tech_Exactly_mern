@@ -1,6 +1,8 @@
 import request from "supertest";
 import app from "../../src/app";
 import { ActivityLog } from "../../src/models/activityLog.model";
+import { User } from "../../src/models/user.model";
+import { REFRESH_GRACE_MS } from "../../src/services/auth.service";
 import { PASSWORD, bearer, createUser, refreshCookieFrom } from "../helpers";
 
 const api = request(app);
@@ -70,7 +72,7 @@ describe("Auth API /api/v1/auth", () => {
   });
 
   describe("POST /refresh", () => {
-    it("issues a new token pair from the cookie and rejects the old cookie afterwards", async () => {
+    it("issues a new token pair; the old cookie works only during the grace period", async () => {
       const user = await createUser();
       const login = await api.post("/api/v1/auth/login").send({ email: user.email, password: PASSWORD });
       const oldCookie = refreshCookieFrom(login)!;
@@ -79,7 +81,23 @@ describe("Auth API /api/v1/auth", () => {
       expect(res.body.data.accessToken).toEqual(expect.any(String));
       expect(refreshCookieFrom(res)).not.toBe(oldCookie);
 
+      // A second tab sending the same (just replaced) cookie is fine...
+      await api.post("/api/v1/auth/refresh").set("Cookie", oldCookie).expect(200);
+
+      // ...but after the grace period it counts as reuse of a stolen token.
+      await User.updateOne(
+        { _id: user.id },
+        { $set: { "rotatedRefreshTokens.$[].rotatedAt": new Date(Date.now() - REFRESH_GRACE_MS - 1000) } },
+      );
       await api.post("/api/v1/auth/refresh").set("Cookie", oldCookie).expect(401);
+    });
+
+    it("never exposes the rotated-token bookkeeping in responses", async () => {
+      const user = await createUser();
+      const login = await api.post("/api/v1/auth/login").send({ email: user.email, password: PASSWORD });
+      const res = await api.post("/api/v1/auth/refresh").set("Cookie", refreshCookieFrom(login)!).expect(200);
+      expect(res.body.data.user).not.toHaveProperty("rotatedRefreshTokens");
+      expect(res.body.data.user).not.toHaveProperty("refreshTokens");
     });
 
     it("returns 401 and clears the cookie when there is no valid token", async () => {
