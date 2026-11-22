@@ -12,6 +12,6 @@ module.exports = {
   setupFilesAfterEnv: ["<rootDir>/tests/setup/db.ts"],
   // Downloading the MongoDB binary on the very first run can take a while.
   testTimeout: 30000,
-  collectCoverageFrom: ["src/**/*.ts", "!src/index.ts", "!src/types/**"],
+  collectCoverageFrom: ["src/**/*.ts", "!src/index.ts", "!src/types/**", "!src/scripts/**"],
   coverageReporters: ["text", "text-summary", "html"],
 };
